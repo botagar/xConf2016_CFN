@@ -28,19 +28,51 @@
 			document.getElementsByTagName( 'head' )[0].appendChild( link );
 		</script>
 	</head>
-	
+
 	<body>
 		<div class="reveal">
 			<div class="slides">
 				<!-- Slide 1: Introduction -->
-				<section id="slide-1" data-background="images/clouds.gif"> <!-- find a good looping cloud gif or video -->
-					<h1>CloudFormation...</h1>
-					<h3>Let's start gazing</h3>
+				<section id="slide-1" data-background="images/clouds.gif">
+          <h1>CloudFormation...</h1>
+					<h3>Let's start seeding</h3>
 				</section>
-				
+
 				<!-- Slide 2: Launch the demo template! -->
 				<section>
 					<h2>Let's seed a Cloud</h2>
+					<p>Launch Demo</p>
+				</section>
+
+				<!-- Slie 3: Structure of a CloudFormation Template -->
+				<section>
+          <section>
+            <h1>Structure of a CloudFormation Template</h1>
+          </section>
+          <section>
+            <h2>CloudFormation is a JSON document</h2>
+            <p>Essentially alot of text and squiggly brackets</p>
+          </section>
+          <section>
+            <h3>Basic Template</h3>
+            <pre>
+              <code class="hljs">
+              {
+                  "AWSTemplateFormatVersion" : "2010-09-09",
+                  "Description" : "",
+                  "Metadata" : {},
+                  "Parameters"  : {},
+                  "Mappings" : {},
+                  "Conditions" : {},
+                  "Resources" : {},
+                  "Outputs" : {}
+              }
+              </code>
+            </pre>
+            <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html">
+              Information on template format versions
+            </a>
+          </section>
 				</section>
 			</div>
 		</div>
