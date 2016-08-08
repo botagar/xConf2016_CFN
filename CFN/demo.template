@@ -1,0 +1,1011 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description"              : "xConf 2016 Demo Template",
+    "Parameters"               : {
+        "AccessKeyID" : {
+            "Description" : "The Access Key to access the S3 bucket.",
+            "Type"        : "String",
+            "Default"   : "AKIAIMDQEDKG6G2PTOPQ"
+        },
+        "Domain"                    : {
+            "Description" : "The Domain which the webstacks load balancers will be aliased under",
+            "Type"        : "String",
+            "Default"   : "example.com"
+        },
+        "Environment"                 : {
+            "Description" : "The name of the environment.",
+            "Type"        : "String",
+            "Default"     : "Demo"
+        },
+        "DetailedMonitoring" : {
+            "Description" : "Enable detailed monitoring on the instances",
+            "Type"        : "String",
+            "Default"   : "false"
+        },
+        "BootstrapperScriptBundleUrl" : {
+            "Description" : "The URL to a ZIP file containing the PowerShell script package to bootstrap EC2 instances in this CloudFormation template.",
+            "Type"        : "String",
+            "Default"   : ""
+        },
+        "PowerShellModulesBundleUrl"          : {
+            "Description" : "The URL to a ZIP file containing any PowerShell modules required by this CloudFormation template.",
+            "Type"        : "String",
+            "Default"   : ""
+        },
+        "S3BucketName"                        : {
+            "Description" : "The S3 Bucket Name used in URL's to specify authentication against.",
+            "Type"        : "String",
+            "Default"   : "xConf-Demo-2016"
+        },
+        "SecretAccessKeyID"                   : {
+            "NoEcho" : "true",
+            "Description" : "The Secret Key to access the S3 bucket.",
+            "Type"        : "String",
+            "Default"   : "Mghwk1NDBpB2+7LDpuOUapRbOk1gcx4NGdy6L4oz"
+        },
+        "VPCCidrBlock"                        : {
+            "Description" : "The VPC CIDR Bloc, e.g. 10.0.0.0/16 ",
+            "Type"        : "String",
+            "Default"     : "10.0.0.0/16"
+        },
+        "PublicAZ1CidrBlock"                    : {
+            "Description" : "The CIDR Bloc for the public AZ1, e.g. 10.0.0.0/24 ",
+            "Type"        : "String",
+            "Default"     : "10.0.0.0/24"
+        },
+        "PublicAZ2CidrBlock"                    : {
+            "Description" : "The CIDR Bloc for public AZ2, e.g. 10.0.1.0/24 ",
+            "Type"        : "String",
+            "Default"     : "10.0.1.0/24"
+        },
+        "PrivateAZ1CidrBlock"                    : {
+            "Description" : "The CIDR Bloc for public AZ1, e.g. 10.0.1.0/24 ",
+            "Type"        : "String",
+            "Default"     : "10.0.2.0/24"
+        },
+        "PrivateAZ2CidrBlock"                    : {
+            "Description" : "The CIDR Bloc for public AZ2, e.g. 10.0.1.0/24 ",
+            "Type"        : "String",
+            "Default"     : "10.0.3.0/24"
+        },
+        "HostedZoneId"                        : {
+            "Description" : "The Hosted Zone ID",
+            "Type"        : "AWS::Route53::HostedZone::Id",
+            "Default"   : "Z34142489XBIAB"
+        },
+        "WebserverAMI"      : {
+            "Description" : "The WebServer AMI used for the base Windows Image",
+            "Type" : "String",
+            "Default"   : "ami-fb6812c1"
+        },
+        "WebserverInstanceType"                : {
+            "Description" : "Machine Size for the MyDominos Team App webstack",
+            "Type"        : "String",
+            "Default"     : "t2.micro",
+            "AllowedValues" : [
+                "t2.micro",
+                "t2.medium",
+                "t2.large",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "c1.medium",
+                "c1.xlarge"
+            ],
+            "ConstraintDescription" : "must be a valid EC2 instance type."
+        },
+        "WebserverMaxPoolSize"                : {
+            "Description" : "Max number of machines allowed in the autoscaling group",
+            "Type"        : "String",
+            "Default"     : "2"
+        },
+        "WebserverMinPoolSize"                : {
+            "Description" : "Min number of machines allowed in the autoscaling group",
+            "Type"        : "String",
+            "Default"     : "1"
+        },
+        "MachinePasswordEncryptionKey"                : {
+            "Description" : "The public key of the keypair generated from the AWS console which encrypts the machine passwords",
+            "Type"        : "String",
+            "Default"     : "xConfDemo2016KeyPair"
+        },
+        "WebserverIamInstanceProfile"                 : {
+            "Description" : "Iam Instance ARN Account Resource Link for Webservers",
+            "Type"        : "String",
+            "Default"   : "arn:aws:iam::797628964671:instance-profile/Ec2-S3-Access"
+        },
+        "WebserverWildcardSSLCert"                      : {
+            "Description" : "Wildcard SSL Cert arn link generated through ACM",
+            "Type" : "String",
+            "Default"   : "arn:aws:acm:ap-southeast-2:797628964671:certificate/98513ad3-66c5-48f6-8ba7-d664b0503df7"
+        },
+        "SNSTopicArnEc2Terminate"       : {
+            "Description" : "The SNS Topic Arn which handles EC2 Instace terminate events.",
+            "Type" : "String",
+            "Default"   : "arn:aws:sns:ap-southeast-2:797628964671:xConfDemo2016"
+        }
+    },
+    "Resources"                : {
+        "VPC" : {
+            "Type" : "AWS::EC2::VPC",
+            "Properties" : {
+                "CidrBlock" : {
+                    "Ref" : "VPCCidrBlock"
+                },
+                "InstanceTenancy" : "default",
+                "EnableDnsSupport" : "true",
+                "EnableDnsHostnames" : "true"
+            },
+            "DependsOn"  : [
+                "InternetGateway"
+            ]
+        },
+        "AttachGateway"             : {
+            "Type" : "AWS::EC2::VPCGatewayAttachment",
+            "Properties" : {
+                "InternetGatewayId" : {
+                    "Ref" : "InternetGateway"
+                },
+                "VpcId"             : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "InternetGateway"           : {
+            "Type" : "AWS::EC2::InternetGateway",
+            "Properties" : {
+            }
+        },
+        "DHCPOptions" : {
+            "Type" : "AWS::EC2::DHCPOptions",
+            "Properties" : {
+                "DomainName" : "ap-southeast-2.compute.internal",
+                "DomainNameServers" : [
+                    "AmazonProvidedDNS"
+                ]
+            }
+        },
+        "DHCPOptionsVpcAssociation": {
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+            "Properties": {
+                "DhcpOptionsId": {
+                    "Ref": "DHCPOptions"
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "AclEgress"       : {
+            "Type" : "AWS::EC2::NetworkAclEntry",
+            "Properties" : {
+                "NetworkAclId" : {
+                    "Ref" : "AclGroup"
+                },
+                "RuleNumber"   : "100",
+                "Protocol"     : "-1",
+                "RuleAction"   : "allow",
+                "Egress"       : "true",
+                "CidrBlock"    : "0.0.0.0/0",
+                "PortRange"    : {
+                    "From" : "0",
+                    "To"   : "65535"
+                }
+            }
+        },
+        "AclIngress"       : {
+            "Type" : "AWS::EC2::NetworkAclEntry",
+            "Properties" : {
+                "NetworkAclId" : {
+                    "Ref" : "AclGroup"
+                },
+                "RuleNumber"   : "100",
+                "Protocol"     : "-1",
+                "RuleAction"   : "allow",
+                "Egress"       : "false",
+                "CidrBlock"    : "0.0.0.0/0",
+                "PortRange"    : {
+                    "From" : "0",
+                    "To"   : "65535"
+                }
+            }
+        },
+        "AclGroup"   : {
+            "Type" : "AWS::EC2::NetworkAcl",
+            "Properties" : {
+                "VpcId" : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PublicSubnetAZ1"                : {
+            "Type" : "AWS::EC2::Subnet",
+            "Properties" : {
+                "AvailabilityZone" : "ap-southeast-2a",
+                "CidrBlock"        : {
+                    "Ref" : "PublicAZ1CidrBlock"
+                },
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PublicSubnetAZ2"                : {
+            "Type" : "AWS::EC2::Subnet",
+            "Properties" : {
+                "AvailabilityZone" : "ap-southeast-2c",
+                "CidrBlock"        : {
+                    "Ref" : "PublicAZ2CidrBlock"
+                },
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PublicRouteTable"             : {
+            "Type" : "AWS::EC2::RouteTable",
+            "Properties" : {
+                "VpcId" : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "DefaultEgressRouting"                 : {
+            "Type" : "AWS::EC2::Route",
+            "DependsOn" : "AttachGateway",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PublicRouteTable"
+                },
+                "GatewayId"    : {
+                    "Ref" : "InternetGateway"
+                },
+                "DestinationCidrBlock" : "0.0.0.0/0"
+            }
+        },
+        "PublicSubnetAZ1RouteTableAssociation" : {
+            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PublicRouteTable"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PublicSubnetAZ1"
+                }
+            }
+        },
+        "PublicSubnetAZ2RouteTableAssociation" : {
+            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PublicRouteTable"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PublicSubnetAZ2"
+                }
+            }
+        },
+        "PublicSubnetAZ1AclAssociation" : {
+            "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties" : {
+                "NetworkAclId" : {
+                    "Ref" : "AclGroup"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PublicSubnetAZ1"
+                }
+            }
+        },
+        "PublicSubnetAZ2AclAssociation" : {
+            "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties" : {
+                "NetworkAclId" : {
+                    "Ref" : "AclGroup"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PublicSubnetAZ2"
+                }
+            }
+        },
+        "EIPNATAZ1": {
+          "Type": "AWS::EC2::EIP",
+          "Properties": {
+            "Domain": "vpc"
+          },
+          "DependsOn" : "AttachGateway"
+        },
+        "EIPNATAZ2": {
+          "Type": "AWS::EC2::EIP",
+          "Properties": {
+            "Domain": "vpc"
+          },
+          "DependsOn" : "AttachGateway"
+        },
+        "NATAZ1": {
+          "Type": "AWS::EC2::NatGateway",
+          "DependsOn": "AttachGateway",
+          "Properties": {
+            "AllocationId": {
+              "Fn::GetAtt": [
+                "EIPNATAZ1",
+                "AllocationId"
+              ]
+            },
+            "SubnetId": {
+              "Ref": "PublicSubnetAZ1"
+            }
+          }
+        },
+        "NATAZ2": {
+          "Type": "AWS::EC2::NatGateway",
+          "DependsOn": "AttachGateway",
+          "Properties": {
+            "AllocationId": {
+              "Fn::GetAtt": [
+                "EIPNATAZ2",
+                "AllocationId"
+              ]
+            },
+            "SubnetId": {
+              "Ref": "PublicSubnetAZ2"
+            }
+          }
+        },
+        "PrivateSubnetAZ1"                : {
+            "Type" : "AWS::EC2::Subnet",
+            "Properties" : {
+                "AvailabilityZone" : "ap-southeast-2a",
+                "CidrBlock"        : {
+                    "Ref" : "PrivateAZ1CidrBlock"
+                },
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PrivateSubnetAZ2"                : {
+            "Type" : "AWS::EC2::Subnet",
+            "Properties" : {
+                "AvailabilityZone" : "ap-southeast-2c",
+                "CidrBlock"        : {
+                    "Ref" : "PrivateAZ2CidrBlock"
+                },
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PrivateSubnetAZ1RouteTable"             : {
+            "Type" : "AWS::EC2::RouteTable",
+            "Properties" : {
+                "VpcId" : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PrivateSubnetAZ2RouteTable"             : {
+            "Type" : "AWS::EC2::RouteTable",
+            "Properties" : {
+                "VpcId" : {
+                    "Ref" : "VPC"
+                }
+            }
+        },
+        "PrivateSubnetAZ1RouteTableAssociation" : {
+            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ1RouteTable"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PrivateSubnetAZ1"
+                }
+            }
+        },
+        "PrivateSubnetAZ2RouteTableAssociation" : {
+            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ2RouteTable"
+                },
+                "SubnetId"     : {
+                    "Ref" : "PrivateSubnetAZ2"
+                }
+            }
+        },
+        "RouteToNATAZ1"                 : {
+            "Type" : "AWS::EC2::Route",
+            "DependsOn" : "AttachGateway",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ1RouteTable"
+                },
+                "NatGatewayId"    : {
+                    "Ref" : "NATAZ1"
+                },
+                "DestinationCidrBlock" : "0.0.0.0/0"
+            }
+        },
+        "RouteToNATAZ2"                 : {
+            "Type" : "AWS::EC2::Route",
+            "DependsOn" : "AttachGateway",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ2RouteTable"
+                },
+                "NatGatewayId"    : {
+                    "Ref" : "NATAZ2"
+                },
+                "DestinationCidrBlock" : "0.0.0.0/0"
+            }
+        },
+        "RouteToIGWFromPrivateSubnetToWhitelistIp1"                 : {
+            "Type" : "AWS::EC2::Route",
+            "DependsOn" : "AttachGateway",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ1RouteTable"
+                },
+                "GatewayId"    : {
+                    "Ref" : "InternetGateway"
+                },
+                "DestinationCidrBlock" : "0.0.0.0/0"
+            }
+        },
+        "RouteToIGWFromPrivateSubnetToWhitelistIp2"                 : {
+            "Type" : "AWS::EC2::Route",
+            "DependsOn" : "AttachGateway",
+            "Properties" : {
+                "RouteTableId" : {
+                    "Ref" : "PrivateSubnetAZ2RouteTable"
+                },
+                "GatewayId"    : {
+                    "Ref" : "InternetGateway"
+                },
+                "DestinationCidrBlock" : "0.0.0.0/0"
+            }
+        },
+        "BaseWebserverSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Allow all ingress traffic from any of the webservers within this VPC",
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                },
+                "SecurityGroupEgress" : [
+                ],
+                "SecurityGroupIngress" : [
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "80",
+                        "ToPort"     : "80",
+                        "CidrIp"     : {
+                            "Fn::Join" : [
+                                "/",
+                                [
+                                    {
+                                        "Ref" : "EIPNATAZ1"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "80",
+                        "ToPort"     : "80",
+                        "CidrIp"     : {
+                            "Fn::Join" : [
+                                "/",
+                                [
+                                    {
+                                        "Ref" : "EIPNATAZ2"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "443",
+                        "ToPort"     : "443",
+                        "CidrIp"     : {
+                            "Fn::Join" : [
+                                "/",
+                                [
+                                    {
+                                        "Ref" : "EIPNATAZ1"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "443",
+                        "ToPort"     : "443",
+                        "CidrIp"     : {
+                            "Fn::Join" : [
+                                "/",
+                                [
+                                    {
+                                        "Ref" : "EIPNATAZ2"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "BaseWebserverSecurityGroupSelfReference" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupId" : {
+                    "Ref" : "BaseWebserverSecurityGroup"
+                },
+                "IpProtocol" : "tcp",
+                "FromPort"   : "0",
+                "ToPort"     : "65535",
+                "SourceSecurityGroupId" : {
+                    "Ref" : "BaseWebserverSecurityGroup"
+                }
+            },
+            "DependsOn"  : "BaseWebserverSecurityGroup"
+        },
+        "ExternalAccessSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Allow all ingress traffic the DPE building at Hamilton",
+                "VpcId"            : {
+                    "Ref" : "VPC"
+                },
+                "SecurityGroupEgress" : [
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "0",
+                        "ToPort"     : "65535",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ],
+                "SecurityGroupIngress" : [
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "22",
+                        "ToPort"     : "22",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "80",
+                        "ToPort"     : "80",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "443",
+                        "ToPort"     : "443",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "ExternalAccessSecurityGroupSelfReference" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupId" : {
+                    "Ref" : "ExternalAccessSecurityGroup"
+                },
+                "IpProtocol" : "tcp",
+                "FromPort"   : "0",
+                "ToPort"     : "65535",
+                "SourceSecurityGroupId" : {
+                    "Ref" : "ExternalAccessSecurityGroup"
+                }
+            },
+            "DependsOn"  : "ExternalAccessSecurityGroup"
+        },
+        "WindowsServer2012R2" : {
+            "Type" : "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata" : {
+                "AWS::CloudFormation::Init" : {
+                    "config" : {
+                        "sources" : {
+                            "C:\\Program Files\\WindowsPowerShell\\Modules" : {
+                                "Ref" : "PowerShellModulesBundleUrl"
+                            },
+                            "c:\\cfn\\Bootstrap"                           : {
+                                "Ref" : "BootstrapperScriptBundleUrl"
+                            }
+                        },
+                        "files"   : {
+                            "c:\\cfn\\cfn-hup.conf" : {
+                                "content" : {
+                                    "Fn::Join" : [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref" : "AWS::StackId"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref" : "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
+                                "content" : {
+                                    "Fn::Join" : [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.WindowsServer2012R2.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init.exe -v -s ",
+                                            {
+                                                "Ref" : "AWS::StackId"
+                                            },
+                                            " -r WindowsServer2012R2",
+                                            " --region ",
+                                            {
+                                                "Ref" : "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "c:\\cfn\\hooks.d\\cfn-teardown.conf"      : {
+                                "content" : {
+                                    "Fn::Join" : [
+                                        "",
+                                        [
+                                            "[cfn-teardown-hook]\n",
+                                            "triggers=post.remove\n",
+                                            "path=Resources.WindowsServer2012R2.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=powershell.exe -Command C:\\cfn\\Bootstrap\\teardown.ps1\n"
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        "commands" : {
+                            "00-set-execution-policy" : {
+                                "command" : "powershell.exe -Command Set-ExecutionPolicy Unrestricted -Force",
+                                "waitAfterCompletion" : "0"
+                            },
+                            "01-configure-webserver"  : {
+                                "command" : {
+                                    "Fn::Join" : [
+                                        "",
+                                        [
+                                            "powershell.exe -Command \"&{C:\\cfn\\Bootstrap\\bootstrap.ps1",
+                                            " -serverRoles demo",
+                                            "}\""
+                                        ]
+                                    ]
+                                },
+                                "waitAfterCompletion" : "0"
+                            }
+                        },
+                        "services" : {
+                            "windows" : {
+                                "cfn-hup" : {
+                                    "enabled" : "true",
+                                    "ensureRunning" : "true",
+                                    "files"         : [
+                                        "c:\\cfn\\cfn-hup.conf",
+                                        "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "AWS::CloudFormation::Authentication" : {
+                    "S3AccessCreds" : {
+                        "type" : "S3",
+                        "accessKeyId" : {
+                            "Ref" : "AccessKeyID"
+                        },
+                        "secretKey"   : {
+                            "Ref" : "SecretAccessKeyID"
+                        },
+                        "buckets"     : [
+                            {
+                                "Ref" : "S3BucketName"
+                            }
+                        ]
+                    }
+                }
+            },
+            "Properties" : {
+                "ImageId" : {
+                    "Ref" : "WebserverAMI"
+                },
+                "InstanceType" : {
+                    "Ref" : "WebserverInstanceType"
+                },
+                "KeyName"      : {
+                    "Ref" : "MachinePasswordEncryptionKey"
+                },
+                "InstanceMonitoring": { "Ref": "DetailedMonitoring" },
+                "AssociatePublicIpAddress" : false,
+                "SecurityGroups"           : [
+                    {
+                        "Ref" : "BaseWebserverSecurityGroup"
+                    },
+                    {
+                        "Ref" : "ExternalAccessSecurityGroup"
+                    }
+                ],
+                "IamInstanceProfile": { "Ref" : "WebserverIamInstanceProfile" },
+                "UserData"                 : {
+                    "Fn::Base64" : {
+                        "Fn::Join" : [
+                            "",
+                            [
+                                "<script>\n",
+                                "cfn-init.exe -v -s ",
+                                {
+                                    "Ref" : "AWS::StackId"
+                                },
+                                " -r WindowsServer2012R2",
+                                " --region ",
+                                {
+                                    "Ref" : "AWS::Region"
+                                },
+                                "\n",
+                                "</script>"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "LoadBalancer"            : {
+            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties" : {
+                "CrossZone" : "true",
+                "Subnets" : [
+                    {
+                        "Ref" : "PublicSubnetAZ1"
+                    },
+                    {
+                        "Ref" : "PublicSubnetAZ2"
+                    }
+                ],
+                "SecurityGroups" : [
+                    {
+                        "Ref" : "BaseWebserverSecurityGroup"
+                    },
+                    {
+                        "Ref" : "ExternalAccessSecurityGroup"
+                    }
+                ],
+                "Listeners"      : [
+                    {
+                        "LoadBalancerPort" : "80",
+                        "InstancePort"     : "80",
+                        "Protocol"         : "HTTP"
+                    },
+                    {
+                        "LoadBalancerPort" : "443",
+                        "InstancePort"     : "80",
+                        "Protocol"         : "HTTPS",
+                        "SSLCertificateId" : {
+                            "Ref"   : "WebserverWildcardSSLCert"
+                        }
+                    }
+                ],
+                "HealthCheck"    : {
+                    "Target" : "HTTP:80/",
+                    "HealthyThreshold" : "3",
+                    "UnhealthyThreshold" : "5",
+                    "Interval"           : "30",
+                    "Timeout"            : "5"
+                }
+            }
+        },
+        "DNSRecordSets"           : {
+            "Type" : "AWS::CloudFormation::Stack",
+            "Properties" : {
+                "Parameters" : {
+                    "ApplicationName" : "My Autoscaling Webserver",
+                    "Domain" : {
+                        "Ref" : "Domain"
+                    },
+                    "Environment"     : {
+                        "Ref" : "Environment"
+                    },
+                    "HostedZoneId"    : {
+                        "Ref" : "HostedZoneId"
+                    },
+                    "LoadBalancerCanonicalHostedZoneNameID" : {
+                        "Fn::GetAtt" : [
+                            "LoadBalancer",
+                            "CanonicalHostedZoneNameID"
+                        ]
+                    },
+                    "LoadBalancerDNSName"                   : {
+                        "Fn::GetAtt" : [
+                            "LoadBalancer",
+                            "DNSName"
+                        ]
+                    }
+                },
+                "TimeoutInMinutes" : 10
+            },
+            "DependsOn"  : [
+                "LoadBalancer"
+            ]
+        },
+        "WindowsAutoScalingGroup" : {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "Properties" : {
+                "VPCZoneIdentifier" : [
+                    {
+                        "Ref" : "PrivateSubnetAZ1"
+                    },
+                    {
+                        "Ref" : "PrivateSubnetAZ2"
+                    }
+                ],
+                "LaunchConfigurationName" : {
+                    "Ref" : "WindowsServer2012R2"
+                },
+                "LoadBalancerNames"       : [
+                    {
+                        "Ref" : "LoadBalancer"
+                    }
+                ],
+                "NotificationConfiguration" : {
+                    "TopicARN" : {
+                        "Ref" : "SNSTopicArnEc2Terminate"
+                    },
+                    "NotificationTypes" : [
+                        "autoscaling:EC2_INSTANCE_TERMINATE"
+                    ]
+                },
+                "MaxSize"                   : {
+                    "Ref" : "WebserverMaxPoolSize"
+                },
+                "MinSize"                   : {
+                    "Ref" : "WebserverMinPoolSize"
+                },
+                "Tags"                      : [
+                    {
+                        "Key" : "Deployment Roles",
+                        "Value" : "xConf Demo",
+                        "PropagateAtLaunch" : "true"
+                    },
+                    {
+                        "Key" : "Environment",
+                        "Value" : {
+                            "Ref" : "Environment"
+                        },
+                        "PropagateAtLaunch" : "true"
+                    },
+                    {
+                        "Key" : "Application",
+                        "Value" : "My Autoscaling Webserver",
+                        "PropagateAtLaunch" : "true"
+                    },
+                    {
+                        "Key" : "BaseAmi",
+                        "Value" : {
+                            "Ref" : "WebserverAMI"
+                        },
+                        "PropagateAtLaunch" : "true"
+                    },
+                    {
+                        "Key" : "HostedZoneId",
+                        "Value" : {
+                            "Ref" : "HostedZoneId"
+                        },
+                        "PropagateAtLaunch" : "true"
+                    }
+                ]
+            }
+        },
+        "ScaleDownPolicy" : {
+            "Type" : "AWS::AutoScaling::ScalingPolicy",
+            "Properties" : {
+                "AutoScalingGroupName" : {
+                    "Ref" : "WindowsAutoScalingGroup"
+                },
+                "AdjustmentType"       : "ChangeInCapacity",
+                "Cooldown"             : "300",
+                "ScalingAdjustment"    : "-1"
+            }
+        },
+        "ScaleUpPolicy"   : {
+            "Type" : "AWS::AutoScaling::ScalingPolicy",
+            "Properties" : {
+                "AutoScalingGroupName" : {
+                    "Ref" : "WindowsAutoScalingGroup"
+                },
+                "AdjustmentType"       : "ChangeInCapacity",
+                "Cooldown"             : "300",
+                "ScalingAdjustment"    : "1"
+            }
+        },
+        "ScaleUpCpuAlarm" : {
+            "Type" : "AWS::CloudWatch::Alarm",
+            "Properties" : {
+                "AlarmDescription" : "Scale-up if CPU > 75% for 12 minutes",
+                "MetricName"       : "CPUUtilization",
+                "Namespace"        : "AWS/EC2",
+                "Statistic"        : "Average",
+                "Period"           : "360",
+                "EvaluationPeriods" : "2",
+                "Threshold"         : "75",
+                "AlarmActions"      : [
+                    {
+                        "Ref" : "ScaleUpPolicy"
+                    }
+                ],
+                "Dimensions"        : [
+                    {
+                        "Name" : "AutoScalingGroupName",
+                        "Value" : {
+                            "Ref" : "WindowsAutoScalingGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator" : "GreaterThanThreshold"
+            }
+        },
+        "ScaleDownCpuAlarm" : {
+            "Type" : "AWS::CloudWatch::Alarm",
+            "Properties" : {
+                "AlarmDescription" : "Scale-down if CPU < 25% for 6 minutes",
+                "MetricName"       : "CPUUtilization",
+                "Namespace"        : "AWS/EC2",
+                "Statistic"        : "Average",
+                "Period"           : "180",
+                "EvaluationPeriods" : "2",
+                "Threshold"         : "25",
+                "AlarmActions"      : [
+                    {
+                        "Ref" : "ScaleDownPolicy"
+                    }
+                ],
+                "Dimensions"        : [
+                    {
+                        "Name" : "AutoScalingGroupName",
+                        "Value" : {
+                            "Ref" : "WindowsAutoScalingGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator" : "LessThanThreshold"
+            }
+        }
+    },
+    "Outputs"                  : {
+    }
+}
