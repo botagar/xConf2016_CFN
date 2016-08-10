@@ -462,7 +462,7 @@
                 "GatewayId"    : {
                     "Ref" : "InternetGateway"
                 },
-                "DestinationCidrBlock" : "0.0.0.0/0"
+                "DestinationCidrBlock" : "1.0.0.0/8"
             }
         },
         "RouteToIGWFromPrivateSubnetToWhitelistIp2"                 : {
@@ -475,7 +475,7 @@
                 "GatewayId"    : {
                     "Ref" : "InternetGateway"
                 },
-                "DestinationCidrBlock" : "0.0.0.0/0"
+                "DestinationCidrBlock" : "1.0.0.0/8"
             }
         },
         "BaseWebserverSecurityGroup" : {
@@ -811,14 +811,6 @@
                         "LoadBalancerPort" : "80",
                         "InstancePort"     : "80",
                         "Protocol"         : "HTTP"
-                    },
-                    {
-                        "LoadBalancerPort" : "443",
-                        "InstancePort"     : "80",
-                        "Protocol"         : "HTTPS",
-                        "SSLCertificateId" : {
-                            "Ref"   : "WebserverWildcardSSLCert"
-                        }
                     }
                 ],
                 "HealthCheck"    : {
@@ -830,38 +822,47 @@
                 }
             }
         },
-        "DNSRecordSets"           : {
-            "Type" : "AWS::CloudFormation::Stack",
+        "DNSRecordSets" : {
+            "Type" : "AWS::Route53::RecordSetGroup",
             "Properties" : {
-                "Parameters" : {
-                    "ApplicationName" : "My Autoscaling Webserver",
-                    "Domain" : {
-                        "Ref" : "Domain"
-                    },
-                    "Environment"     : {
-                        "Ref" : "Environment"
-                    },
-                    "HostedZoneId"    : {
-                        "Ref" : "HostedZoneId"
-                    },
-                    "LoadBalancerCanonicalHostedZoneNameID" : {
-                        "Fn::GetAtt" : [
-                            "LoadBalancer",
-                            "CanonicalHostedZoneNameID"
-                        ]
-                    },
-                    "LoadBalancerDNSName"                   : {
-                        "Fn::GetAtt" : [
-                            "LoadBalancer",
-                            "DNSName"
-                        ]
-                    }
+                "HostedZoneId" : {
+                    "Ref" : "HostedZoneId"
                 },
-                "TimeoutInMinutes" : 10
-            },
-            "DependsOn"  : [
-                "LoadBalancer"
-            ]
+                "Comment"      : "Zone apex alias targeted to LoadBalancer.",
+                "RecordSets"   : [
+                    {
+                        "Name" : {
+                            "Fn::Join" : [
+                                ".",
+                                [
+                                    "MyApp",
+                                    {
+                                        "Ref" : "Environment"
+                                    },
+                                    {
+                                        "Ref" : "Domain"
+                                    }
+                                ]
+                            ]
+                        },
+                        "Type" : "A",
+                        "AliasTarget" : {
+                            "HostedZoneId" : {
+                                "Fn::GetAtt" : [
+                                    "LoadBalancer",
+                                    "CanonicalHostedZoneNameID"
+                                ]
+                            },
+                            "DNSName"      : {
+                                "Fn::GetAtt" : [
+                                    "LoadBalancer",
+                                    "DNSName"
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
         },
         "WindowsAutoScalingGroup" : {
             "Type" : "AWS::AutoScaling::AutoScalingGroup",
