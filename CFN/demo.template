@@ -110,12 +110,12 @@
         "WebserverMaxPoolSize"                : {
             "Description" : "Max number of machines allowed in the autoscaling group",
             "Type"        : "String",
-            "Default"     : "2"
+            "Default"     : "6"
         },
         "WebserverMinPoolSize"                : {
             "Description" : "Min number of machines allowed in the autoscaling group",
             "Type"        : "String",
-            "Default"     : "1"
+            "Default"     : "3"
         },
         "MachinePasswordEncryptionKey"                : {
             "Description" : "The public key of the keypair generated from the AWS console which encrypts the machine passwords",
