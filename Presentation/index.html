@@ -88,13 +88,38 @@
 				<!-- Slide 5: Building blocks (resources) -->
 				<section>
 					<section>
-						<h2>The building blocks most likely to be used when developing an autoscaling webserver</h2>
+						<h2>Common building blocks</h2>
 						<p>(AWS Resources)</p>
 					</section>
 					<section>
 						<h3>Virtual Private Cloud (VPC)</h3>
 						<ul>
-							<li>Defining network adress ranges</li>
+							<li>Defining logical groups of systems</li>
+							<li>Defining network address ranges</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Subnets</h3>
+						<ul>
+							<li>Defining event tighter logical groups of systems</li>
+							<li>Splits up VPC network range into smaller groups</li>
+							<li>Most (EC2) resources are required to be associated with a subnet</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Access Control (ACL)</h3>
+						<ul>
+							<li>Network access control at the VPC level</li>
+							<li>Stateless control of ingress and egress network traffic</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Security Groups</h3>
+						<ul>
+							<li>Network access control at the Ec2 resource level</li>
+							<li>Stateful control of ingress and egress network traffic</li>
+							<li>Can be self referencing to allow any set of Ec2 resources associated with the Security Group to connect to each other</li>
+							<li>The union of rules apply to an Ec2 resource when mulitple security groups are attached</li>
 						</ul>
 					</section>
 				</section>
