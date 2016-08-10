@@ -10,7 +10,7 @@
         "Domain"                    : {
             "Description" : "The Domain which the webstacks load balancers will be aliased under",
             "Type"        : "String",
-            "Default"   : "example.com"
+            "Default"   : "xconf.com"
         },
         "Environment"                 : {
             "Description" : "The name of the environment.",
@@ -71,7 +71,7 @@
         "HostedZoneId"                        : {
             "Description" : "The Hosted Zone ID",
             "Type"        : "AWS::Route53::HostedZone::Id",
-            "Default"   : "Z34142489XBIAB"
+            "Default"   : "Z39Z7VOAF9PDM4"
         },
         "WebserverAMI"      : {
             "Description" : "The WebServer AMI used for the base Windows Image",
