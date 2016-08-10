@@ -59,7 +59,29 @@
 					</section>
 				</section>
 
-				<!-- Slide 4: Structure of a CloudFormation Template -->
+				<!-- Slide 4: Example work flow -->
+				<section>
+					<section>
+						<h2>Simple end to end example</h2>
+					</section>
+					<section>
+						<p class="fragment">Make changes to a template in your favourite text editor/IDE</p>
+						<p class="fragment">Check in template into Git</p>
+						<p class="fragment">Let your favourite CI Pipeline system take the template and using AWS' CLI or PowerShell Modules...</p>
+						<p class="fragment">Push the new template to AWS CFN</p>
+						<p class="fragment">Watch your changes take place</p>
+					</section>
+					<section>
+						<h3>Let's go one step further</h3>
+						<p class="fragment">Have your (non prod) infrastructure tear down every night</p>
+						<p class="fragment">Have your CI system spin up a new set of infrastructure in the morning</p>
+						<p class="fragment">Deploy your applications to the fresh infrastructure</p>
+						<p class="fragment">Run your integration tests against them</p>
+						<p class="fragment">Be filled with confidence as the board lights up green!</p>
+					</section>
+				</section>
+
+				<!-- Slide 5: Structure of a CloudFormation Template -->
 				<section>
           <section>
             <h1>Structure of a CloudFormation Template</h1>
@@ -85,7 +107,7 @@
           </section>
 				</section>
 
-				<!-- Slide 5: Building blocks (resources) -->
+				<!-- Slide 6: Building blocks (resources) -->
 				<section>
 					<section>
 						<h2>Common building blocks</h2>
@@ -132,6 +154,16 @@
 					</section>
 				</section>
 
+				<!-- Slide 7: Example launch script -->
+				<section>
+					<h3>Get our template into AWS</h3>
+					<small>AWS CLI</small>
+					<pre><code class="hljs">
+aws [put code here]
+					</code></pre>
+				</section>
+
+				<!-- Slide 8: Live Coding Demo -->
 				<section>
 					<section>
 						<h2>Live Demo</h2>
