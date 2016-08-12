@@ -177,13 +177,34 @@
 
 				<!-- Slide 7: Example launch script -->
 				<section>
-					<h3>Get our template into AWS</h3>
-					<small>AWS CLI</small>
-					<pre><code class="hljs">
+					<section>
+						<h3>Get our template into AWS</h3>
+						<small>AWS CLI</small>
+						<pre><code class="hljs">
 aws cloudformation create-stack
 	--stack-name xConfDemo
 	--template-body file://CFN//demo.template
-					</code></pre>
+						</code></pre>
+					</section>
+					<section>
+						<small>AWS Powershell</small></br>
+						<small>Warning: Not tested!</small>
+						<pre><code class="hljs">
+New-CFNStack `
+	-Capability "CAPABILITY_IAM" `
+	-StackName "xConfDemo" `
+	-TemplateURL "URL to template uploaded into S3" `
+	-Parameters "@(@{ParameterKey="Key1"; ParameterValue="Value1"},@{ParameterKey="Key2"; ParameterValue="Value2"})" `
+	-AccessKey "Your Access Key" `
+	-SecretKey "Your Secret Key" `
+	-Region "ap-southeast-2"
+						</code></pre>
+					</section>
+					<section>
+						<h2>Find the documentation</h2>
+						<a href="http://docs.aws.amazon.com/cli/latest/reference/">For the CLI here!</a></br>
+						<a href="https://aws.amazon.com/documentation/powershell/">And for the Powershell Modules here!</a>
+					</section>
 				</section>
 
 				<!-- Slide 8: Live Coding Demo -->
