@@ -65,7 +65,7 @@
 						<h2>Simple end to end example</h2>
 					</section>
 					<section>
-						<p class="fragment">Make changes to a template in your favourite text editor/IDE</p>
+						<p>Make changes to a template in your favourite text editor/IDE</p>
 						<p class="fragment">Check in template into Git</p>
 						<p class="fragment">Let your favourite CI Pipeline system take the template and using AWS' CLI or PowerShell Modules...</p>
 						<p class="fragment">Push the new template to AWS CFN</p>
@@ -73,7 +73,7 @@
 					</section>
 					<section>
 						<h3>Let's go one step further</h3>
-						<p class="fragment">Have your (non prod) infrastructure tear down every night</p>
+						<p>Have your (non prod) infrastructure tear down every night</p>
 						<p class="fragment">Have your CI system spin up a new set of infrastructure in the morning</p>
 						<p class="fragment">Deploy your applications to the fresh infrastructure</p>
 						<p class="fragment">Run your integration tests against them</p>
@@ -167,6 +167,12 @@
 							<li>Scaling events can be manual or automatic based on performance metrics</li>
 						</ul>
 					</section>
+					<section>
+						<h3>Route Table</h3>
+						<ul>
+							<li>Specifies how network traffic is routed based on certain parameters</li>
+						</ul>
+					</section>
 				</section>
 
 				<!-- Slide 7: Example launch script -->
@@ -174,7 +180,9 @@
 					<h3>Get our template into AWS</h3>
 					<small>AWS CLI</small>
 					<pre><code class="hljs">
-aws [put code here]
+aws cloudformation create-stack
+	--stack-name xConfDemo
+	--template-body file://CFN//demo.template
 					</code></pre>
 				</section>
 
